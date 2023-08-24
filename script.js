@@ -1,41 +1,41 @@
-function get(token, query, callback) {
-	const request = new XMLHttpRequest()
-	request.onreadystatechange = () =>
-		request.readyState == 4 &&
-		request.status == 200 &&
-		callback(JSON.parse(request.responseText))
-	request.open('POST', 'https://api.github.com/graphql', true)
-	request.setRequestHeader('Authorization', `bearer ${token}`)
-	request.send(`{ "query": "{ ${query.replace(/\s+/g, ' ').replace(/"/g, '\\"')} }" }`)
+function get(token, query) {
+	return new Promise((resolve, reject) => {
+		const request = new XMLHttpRequest()
+		request.onreadystatechange = () => {
+			if (request.readyState == 4) {
+				if (request.status == 200)
+					resolve(JSON.parse(request.responseText).data)
+				else
+					reject(request.status)
+			}
+		}
+		request.open('POST', 'https://api.github.com/graphql', true)
+		request.setRequestHeader('Authorization', `Bearer ${token}`)
+		request.send(`{ "query": "{ ${query.replace(/\s+/g, ' ').replace(/"/g, '\\"')} }" }`)
+	})
 }
 
-function getPullRequestCount(token, org, repo, callback) {
-	get(
-		token,
-		`repository(owner: "${org}", name: "${repo}") {
-			pullRequests(states: OPEN) {
-				totalCount
-			}
-		}`,
-		(body) => callback(body.data.repository.pullRequests.totalCount)
-	)
+async function getOpenPullRequestCount(token, org, repo) {
+	const query = `repository(owner: "${org}", name: "${repo}") {
+		pullRequests(states: OPEN) {
+			totalCount
+		}
+	}`
+	return (await get(token, query)).repository.pullRequests.totalCount
 }
 
-function getPullRequests(token, org, repo, total, callback) {
-	get(
-		token,
-		`repository(owner: "${org}", name: "${repo}") {
-			pullRequests(last: ${total}, states: OPEN) {
-				nodes {
-					number
-					changedFiles
-					additions
-					deletions
-				}
+async function getOpenPullRequests(token, org, repo, total) {
+	const query = `repository(owner: "${org}", name: "${repo}") {
+		pullRequests(last: ${total}, states: OPEN) {
+			nodes {
+				number
+				changedFiles
+				additions
+				deletions
 			}
-		}`,
-		(body) => callback(body.data.repository.pullRequests.nodes)
-	)
+		}
+	}`
+	return (await get(token, query)).repository.pullRequests.nodes
 }
 
 function createSpan(style, value) {
@@ -55,26 +55,24 @@ function injectHtml(div, pr) {
 	div.querySelector('[class="opened-by"]').parentNode.append(element)
 }
 
-chrome.storage.sync.get('token', ({ token }) => {
+chrome.storage.sync.get('token', async ({ token }) => {
 	if (!token)
 		return
 
 	const [, org, repo] = document.URL.match(/https:\/\/github.com\/([^\/]*)\/([^\/]*)\/pulls/)
 
-	getPullRequestCount(token, org, repo, (total) =>
-		getPullRequests(token, org, repo, total, (list) => {
-			const prs = list.reduce((data, pr) => Object.assign(data, { [pr.number]: pr }), {})
+	const total = await getOpenPullRequestCount(token, org, repo)
+	const prs = (await getOpenPullRequests(token, org, repo, total))
+		.reduce((data, pr) => Object.assign(data, { [pr.number]: pr }), {})
 
-			const divs = document.body
-				.querySelector('div[aria-label="Issues"]')
-				.children.item(0).children
+	const divs = document.body
+		.querySelector('div[aria-label="Issues"]')
+		.children.item(0).children
 
-			for (const div of divs) {
-				const [, id] = div.id.match(/issue_(\d+)/)
-				const pr = prs[id]
-				if (pr)
-					injectHtml(div, pr)
-			}
-		})
-	)
+	for (const div of divs) {
+		const [, id] = div.id.match(/issue_(\d+)/)
+		const pr = prs[id]
+		if (pr)
+			injectHtml(div, pr)
+	}
 })
