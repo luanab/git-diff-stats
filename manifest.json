@@ -5,6 +5,9 @@
 	"version": "1.0",
     "permissions": ["storage"],
     "host_permissions": ["https://api.github.com/graphql"],
+	"action": {
+		"default_icon": "logo.png"
+	},
 	"options_ui": {
 	  "page": "options.html",
 	  "open_in_tab": false
