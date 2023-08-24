@@ -1,0 +1,18 @@
+{
+	"manifest_version": 3,
+	"name": "GitHub +1",
+	"description": "Enrich GitHub open pull requests list page with number of files changed, lines added, and lines deleted.",
+	"version": "1.0",
+    "permissions": ["storage"],
+    "host_permissions": ["https://api.github.com/graphql"],
+	"options_ui": {
+	  "page": "options.html",
+	  "open_in_tab": false
+	},
+	"content_scripts": [
+		{
+			"matches": ["https://*.github.com/*/*/pulls"],
+			"js": ["script.js"]
+		}
+	]
+}
