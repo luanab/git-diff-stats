@@ -14,7 +14,7 @@
 	},
 	"content_scripts": [
 		{
-			"matches": ["https://*.github.com/*/*/pulls"],
+			"matches": ["https://*.github.com/*/*/pulls*"],
 			"js": ["script.js"]
 		}
 	]
