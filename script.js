@@ -35,36 +35,51 @@ async function getOpenPullRequests(token, org, repo, total) {
             }
         }
     }`
-    return (await get(token, query)).repository.pullRequests.nodes
+    return (await get(token, query)).repository.pullRequests.nodes.reduce(
+        (prs, pr) => ({ ...prs, [pr.number]: pr }),
+        {}
+    )
 }
 
-function createSpan(style, value) {
+function appendSpan(div, style, id, value) {
     const span = document.createElement('span')
     span.className = `${style} ml-1`
+    span.id = id
     span.textContent = value
-    return span
+    div.append(span)
+}
+
+function updateSpan(div, id, value) {
+    div.querySelector(`[id="${id}"]`).textContent = value
 }
 
 function injectHtml(div, pr) {
-    const element = document.createElement('div')
-    element.append(
-        createSpan('Counter', pr.changedFiles),
-        createSpan('color-fg-success', '+' + pr.additions),
-        createSpan('color-fg-danger', '-' + pr.deletions)
-    )
-    div.querySelector('[class="opened-by"]').parentNode.append(element)
+    if (!div.querySelector('[id="stats"]')) {
+        const element = document.createElement('div')
+        element.id = 'stats'
+        appendSpan(element, 'Counter', 'changedFiles', pr.changedFiles)
+        appendSpan(element, 'color-fg-success', 'additions', '+' + pr.additions)
+        appendSpan(element, 'color-fg-danger', 'deletions', '-' + pr.deletions)
+        div.querySelector('[class="opened-by"]').parentNode.append(element)
+    } else {
+        updateSpan(div, 'changedFiles', pr.changedFiles)
+        updateSpan(div, 'additions', '+' + pr.additions)
+        updateSpan(div, 'deletions', '-' + pr.deletions)
+    }
 }
 
-chrome.storage.sync.get('token', async ({ token }) => {
-    if (!token)
+const REGEX = /^\/([^\/]+)\/([^\/]+)\/pulls$/
+
+async function run() {
+    const { token } = await chrome.storage.sync.get('token')
+    const match = document.location.pathname.match(REGEX)
+    if (!token || !match)
         return
 
-    const [, org, repo] = document.URL.match(/https:\/\/github.com\/([^\/]*)\/([^\/]*)\/pulls/)
+    const [, org, repo] = match
 
     const total = await getOpenPullRequestCount(token, org, repo)
-    let prs = await getOpenPullRequests(token, org, repo, total)
-    
-    prs = prs.reduce((data, pr) => Object.assign(data, { [pr.number]: pr }), {})
+    const prs = await getOpenPullRequests(token, org, repo, total)
 
     const divs = document.body.querySelector('div[aria-label="Issues"]').children.item(0).children
 
@@ -74,4 +89,8 @@ chrome.storage.sync.get('token', async ({ token }) => {
         if (pr)
             injectHtml(div, pr)
     }
-})
+}
+
+chrome.runtime.onMessage.addListener(run)
+
+run()
