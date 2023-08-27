@@ -3,10 +3,15 @@ function get(token, query) {
         const request = new XMLHttpRequest()
         request.onreadystatechange = () => {
             if (request.readyState == 4) {
-                if (request.status == 200)
-                    resolve(JSON.parse(request.responseText).data)
-                else
-                    reject(request.status)
+                if (request.status != 200) {
+                    reject()
+                } else {
+                    const body = JSON.parse(request.responseText)
+                    if (body.errors?.length > 0)
+                        reject()
+                    else
+                        resolve(body.data)
+                }
             }
         }
         request.open('POST', 'https://api.github.com/graphql', true)
@@ -71,23 +76,28 @@ function injectHtml(div, pr) {
 const REGEX = /^\/([^\/]+)\/([^\/]+)\/pulls$/
 
 async function run() {
-    const { token } = await chrome.storage.sync.get('token')
-    const match = document.location.pathname.match(REGEX)
-    if (!token || !match)
-        return
-
-    const [, org, repo] = match
-
-    const total = await getOpenPullRequestCount(token, org, repo)
-    const prs = await getOpenPullRequests(token, org, repo, total)
-
-    const divs = document.body.querySelector('div[aria-label="Issues"]').children.item(0).children
-
-    for (const div of divs) {
-        const [, id] = div.id.match(/issue_(\d+)/)
-        const pr = prs[id]
-        if (pr)
-            injectHtml(div, pr)
+    try {
+        const { token } = await chrome.storage.sync.get('token')
+        const match = document.location.pathname.match(REGEX)
+        if (!token || !match)
+            return
+    
+        const [, org, repo] = match
+    
+        const total = await getOpenPullRequestCount(token, org, repo)
+        const prs = await getOpenPullRequests(token, org, repo, total)
+    
+        const divs = document.body.querySelector('div[aria-label="Issues"]').children.item(0).children
+    
+        for (const div of divs) {
+            const [, id] = div.id.match(/issue_(\d+)/)
+            const pr = prs[id]
+            if (pr)
+                injectHtml(div, pr)
+        }
+        chrome.runtime.sendMessage({ success: true })
+    } catch (error) {
+        chrome.runtime.sendMessage({ success: false })
     }
 }
 

@@ -3,7 +3,7 @@
     "name": "GitHub +1",
     "description": "Enrich GitHub open pull requests list page with number of files changed, lines added, and lines deleted.",
     "version": "1.0",
-    "permissions": ["storage", "tabs"],
+    "permissions": ["storage", "tabs", "notifications"],
     "host_permissions": ["https://api.github.com/graphql"],
     "action": {
         "default_icon": "logo.png"
