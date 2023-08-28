@@ -1,6 +1,5 @@
-const REGEX = /^(https:\/\/)?github.com\/[^\/]+\/[^\/]+\/pulls/
+const REGEX = /(\/[^\/]+\/[^\/]+)?\/pulls/
 
-const NOTIFICATION_ID = 'failure'
 const NOTIFICATION = {
     type: 'basic',
     iconUrl: 'logo.png',
