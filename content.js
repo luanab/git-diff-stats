@@ -1,3 +1,6 @@
+const PATH_REGEX = /^\/([^\/]+)\/([^\/]+)\/pulls$/
+const PAGE_SIZE = 100
+
 function get(token, query) {
     return new Promise((resolve, reject) => {
         const request = new XMLHttpRequest()
@@ -20,30 +23,30 @@ function get(token, query) {
     })
 }
 
-async function getOpenPullRequestCount(token, org, repo) {
-    const query = `repository(owner: "${org}", name: "${repo}") {
-        pullRequests(states: OPEN) {
-            totalCount
-        }
-    }`
-    return (await get(token, query)).repository.pullRequests.totalCount
-}
-
-async function getOpenPullRequests(token, org, repo, total) {
-    const query = `repository(owner: "${org}", name: "${repo}") {
-        pullRequests(last: ${total}, states: OPEN) {
-            nodes {
-                number
-                changedFiles
-                additions
-                deletions
+async function getOpenPullRequests(token, org, repo) {
+    const prs = {}
+    let cursor
+    do {
+        const query = `repository(owner: "${org}", name: "${repo}") {
+            pullRequests(first: ${PAGE_SIZE}${cursor ? `, after: "${cursor}"` : ''}, states: OPEN) {
+                pageInfo {
+                  endCursor
+                  hasNextPage
+                }
+                nodes {
+                    number
+                    changedFiles
+                    additions
+                    deletions
+                }
             }
-        }
-    }`
-    return (await get(token, query)).repository.pullRequests.nodes.reduce(
-        (prs, pr) => ({ ...prs, [pr.number]: pr }),
-        {}
-    )
+        }`
+        const { pageInfo, nodes } = (await get(token, query)).repository.pullRequests
+        cursor = pageInfo.hasNextPage ? pageInfo.endCursor : null
+        for (const { number, ...pr } of nodes)
+            prs[number] = pr
+    } while (cursor != null)
+    return prs
 }
 
 function appendSpan(div, style, id, value) {
@@ -73,20 +76,18 @@ function injectHtml(div, pr) {
     }
 }
 
-const REGEX = /^\/([^\/]+)\/([^\/]+)\/pulls$/
-
 async function run() {
     try {
         const { token } = await chrome.storage.sync.get('token')
-        const match = document.location.pathname.match(REGEX)
+        const match = document.location.pathname.match(PATH_REGEX)
+        
         if (!token || !match)
             return
     
         const [, org, repo] = match
     
-        const total = await getOpenPullRequestCount(token, org, repo)
-        const prs = await getOpenPullRequests(token, org, repo, total)
-    
+        const prs = await getOpenPullRequests(token, org, repo)
+
         const divs = document.body.querySelector('div[aria-label="Issues"]').children.item(0).children
     
         for (const div of divs) {
@@ -95,6 +96,7 @@ async function run() {
             if (pr)
                 injectHtml(div, pr)
         }
+
         chrome.runtime.sendMessage({ success: true })
     } catch (error) {
         chrome.runtime.sendMessage({ success: false })
