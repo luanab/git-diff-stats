@@ -1,4 +1,4 @@
-const TITLE_REGEX = /(\/[^\/]+\/[^\/]+)?\/pulls/
+const TITLE_REGEX = /Pull requests/
 
 const NOTIFICATION = {
     type: 'basic',

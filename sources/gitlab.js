@@ -35,30 +35,30 @@ async function getDiffStats(token, id) {
     return (await get(token, query)).mergeRequest.diffStatsSummary
 }
 
-function appendSpan(item, style, id, value) {
+function appendSpan(element, style, id, value) {
     const span = document.createElement('span')
     span.className = `${style} ml-1`
     span.id = id
     span.textContent = value
-    item.append(span)
+    element.append(span)
 }
 
-function updateSpan(item, id, value) {
-    item.querySelector(`[id="${id}"]`).textContent = value
+function updateSpan(element, id, value) {
+    element.querySelector(`span[id="${id}"]`).textContent = value
 }
 
-function injectHtml(item, stats) {
-    if (!item.querySelector('[id="stats"]')) {
-        const element = document.createElement('span')
-        element.id = 'stats'
-        appendSpan(element, 'gl-badge badge badge-pill badge-muted sm', 'files', stats.fileCount)
-        appendSpan(element, 'gl-text-green-600 bold', 'additions', '+' + stats.additions)
-        appendSpan(element, 'gl-text-red-500 bold', 'deletions', '-' + stats.deletions)
-        item.querySelector('[class*="issuable-authored"]').append(element)
+function updateHtml(element, stats) {
+    if (!element.querySelector('span[id="stats"]')) {
+        const span = document.createElement('span')
+        span.id = 'stats'
+        appendSpan(span, 'gl-badge badge badge-pill badge-muted sm', 'files', stats.fileCount)
+        appendSpan(span, 'gl-text-green-600 bold', 'additions', '+' + stats.additions)
+        appendSpan(span, 'gl-text-red-500 bold', 'deletions', '-' + stats.deletions)
+        element.querySelector('[class*="issuable-authored"]').append(span)
     } else {
-        updateSpan(item, 'files', stats.fileCount)
-        updateSpan(item, 'additions', '+' + stats.additions)
-        updateSpan(item, 'deletions', '-' + stats.deletions)
+        updateSpan(element, 'files', stats.fileCount)
+        updateSpan(element, 'additions', '+' + stats.additions)
+        updateSpan(element, 'deletions', '-' + stats.deletions)
     }
 }
 
@@ -68,12 +68,12 @@ export async function inject(options, path) {
     if (!token || !match) {
         return
     }
-    const items = document.body.querySelectorAll('li[id^=merge_request_]')
+    const elements = document.body.querySelectorAll('li[id^=merge_request_]')
     const promises = []
-    for (const item of items) {
-        const id = item.getAttribute('data-id')
+    for (const element of elements) {
+        const id = element.getAttribute('data-id')
         const promise = getDiffStats(token, id)
-        promises.concat(promise.then((stats) => injectHtml(item, stats)))
+        promises.concat(promise.then((stats) => updateHtml(element, stats)))
     }
     await Promise.all(promises)
 }

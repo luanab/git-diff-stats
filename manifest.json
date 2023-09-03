@@ -4,7 +4,11 @@
     "description": "Enrich GitHub/GitLab pull/merge requests lists with number of files changed, lines added, and lines deleted.",
     "version": "1.0",
     "permissions": ["storage", "tabs", "notifications"],
-    "host_permissions": ["https://api.github.com/graphql", "https://gitlab.com/api/graphql"],
+    "host_permissions": [
+        "https://api.github.com/graphql",
+        "https://gitlab.com/api/graphql",
+        "https://api.bitbucket.org/2.0/repositories/*/*/pullrequests"
+    ],
     "action": {
         "default_icon": "logo.png"
     },
@@ -17,7 +21,11 @@
     },
     "content_scripts": [
         {
-            "matches": ["https://*.github.com/*", "https://*.gitlab.com/*"],
+            "matches": [
+                "https://*.github.com/*",
+                "https://*.gitlab.com/*",
+                "https://*.bitbucket.org/*"
+            ],
             "js": ["content.js"]
         }
     ],

@@ -34,30 +34,30 @@ async function getDiffStats(token, org, repo, id) {
     return (await get(token, query)).repository.pullRequest
 }
 
-function appendSpan(item, style, id, value) {
+function appendSpan(element, style, id, value) {
     const span = document.createElement('span')
     span.className = `${style} ml-1`
     span.id = id
     span.textContent = value
-    item.append(span)
+    element.append(span)
 }
 
-function updateSpan(item, id, value) {
-    item.querySelector(`[id="${id}"]`).textContent = value
+function updateSpan(element, id, value) {
+    element.querySelector(`span[id="${id}"]`).textContent = value
 }
 
-function injectHtml(item, stats) {
-    if (!item.querySelector('[id="stats"]')) {
-        const element = document.createElement('span')
-        element.id = 'stats'
-        appendSpan(element, 'Counter', 'files', stats.changedFiles)
-        appendSpan(element, 'color-fg-success', 'additions', '+' + stats.additions)
-        appendSpan(element, 'color-fg-danger', 'deletions', '-' + stats.deletions)
-        item.querySelector('[class="opened-by"]').parentNode.append(element)
+function updateHtml(element, stats) {
+    if (!element.querySelector('span[id="stats"]')) {
+        const span = document.createElement('span')
+        span.id = 'stats'
+        appendSpan(span, 'Counter', 'files', stats.changedFiles)
+        appendSpan(span, 'color-fg-success', 'additions', '+' + stats.additions)
+        appendSpan(span, 'color-fg-danger', 'deletions', '-' + stats.deletions)
+        element.querySelector('[class="opened-by"]').parentNode.append(span)
     } else {
-        updateSpan(item, 'files', stats.changedFiles)
-        updateSpan(item, 'additions', '+' + stats.additions)
-        updateSpan(item, 'deletions', '-' + stats.deletions)
+        updateSpan(element, 'files', stats.changedFiles)
+        updateSpan(element, 'additions', '+' + stats.additions)
+        updateSpan(element, 'deletions', '-' + stats.deletions)
     }
 }
 
@@ -67,14 +67,14 @@ export async function inject(options, path) {
     if (!token || !match) {
         return
     }
-    const items = document.body.querySelectorAll('div[id^=issue_]')
+    const elements = document.body.querySelectorAll('div[id^=issue_]')
     const promises = []
-    for (const item of items) {
-        const [, id] = item.id.match(/^issue_(\d+)/)
+    for (const element of elements) {
+        const [, id] = element.id.match(/^issue_(\d+)/)
         const [, org, repo] =
-            match[0] === '/pulls' ? item.id.match(/^issue_\d+_([^_]+)_([^_]+)$/) : match
+            match[0] === '/pulls' ? element.id.match(/^issue_\d+_([^_]+)_([^_]+)$/) : match
         const promise = getDiffStats(token, org, repo, id)
-        promises.concat(promise.then((diff) => injectHtml(item, diff)))
+        promises.concat(promise.then((diff) => updateHtml(element, diff)))
     }
     await Promise.all(promises)
 }
