@@ -1,19 +1,16 @@
-const REGEX = /(\/[^\/]+\/[^\/]+)?\/pulls/
+const TITLE_REGEX = /(\/[^\/]+\/[^\/]+)?\/pulls/
 
 const NOTIFICATION = {
     type: 'basic',
     iconUrl: 'logo.png',
-    title: `GitHub +1 Failure`,
-    message:
-        'Please verify that the given access token has sufficient access (scope "repo" is required).',
+    title: `Git +1 Failure`,
+    message: 'Please verify that the given credentials are correct and have sufficient access.',
 }
 
-chrome.runtime.onMessage.addListener(({ success }) =>
-    success
-        ? chrome.notifications.clear(NOTIFICATION_ID)
-        : chrome.notifications.create(NOTIFICATION_ID, NOTIFICATION)
+chrome.runtime.onMessage.addListener(({ success, source }) =>
+    success ? chrome.notifications.clear(source) : chrome.notifications.create(source, NOTIFICATION)
 )
 
 chrome.tabs.onUpdated.addListener(
-    (id, changes) => REGEX.test(changes.title) && chrome.tabs.sendMessage(id, {})
+    (id, changes) => TITLE_REGEX.test(changes.title) && chrome.tabs.sendMessage(id, {})
 )
