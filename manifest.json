@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Git +1",
-    "description": "Enrich GitHub/GitLab pull/merge requests lists with number of files changed, lines added, and lines deleted.",
+    "description": "Enrich GitHub/GitLab/BitBucket pull/merge requests lists with number of files changed, lines added, and lines deleted.",
     "version": "1.0",
     "permissions": ["storage", "tabs", "notifications"],
     "host_permissions": [

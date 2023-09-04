@@ -4,11 +4,15 @@ const NOTIFICATION = {
     type: 'basic',
     iconUrl: 'logo.png',
     title: `Git +1 Failure`,
-    message: 'Please verify that the given credentials are correct and have sufficient access.',
 }
 
-chrome.runtime.onMessage.addListener(({ success, source }) =>
-    success ? chrome.notifications.clear(source) : chrome.notifications.create(source, NOTIFICATION)
+chrome.runtime.onMessage.addListener(({ success, domain }) =>
+    success
+        ? chrome.notifications.clear(domain)
+        : chrome.notifications.create(domain, {
+              ...NOTIFICATION,
+              message: `Please verify that the given credentials for ${domain} are correct and have sufficient access.`,
+          })
 )
 
 chrome.tabs.onUpdated.addListener(
