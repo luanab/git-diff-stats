@@ -61,8 +61,7 @@ function updateHtml(element, stats) {
     }
 }
 
-export async function inject(options, path) {
-    const { token } = options.github ?? {}
+export async function inject(token, path) {
     const match = path.match(PATH_REGEX)
     if (!token || !match) {
         return

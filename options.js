@@ -1,27 +1,26 @@
 const MESSAGE_TIMEOUT = 2 * 1000
 
 async function restoreOptions() {
-    const { options } = await chrome.storage.sync.get('options')
-    document.getElementById('github_token').value = options?.github?.token || ''
-    document.getElementById('gitlab_token').value = options?.gitlab?.token || ''
-    document.getElementById('bitbucket_username').value = options?.bitbucket?.username || ''
-    document.getElementById('bitbucket_password').value = options?.bitbucket?.password || ''
+    const { tokens } = await chrome.storage.sync.get('tokens')
+    document.getElementById('github_token').value = tokens?.github ?? ''
+    document.getElementById('gitlab_token').value = tokens?.gitlab ?? ''
+    const [bitbucket_username, bitbucket_password] = (atob(tokens?.bitbucket) || ':').split(':')
+    document.getElementById('bitbucket_username').value = bitbucket_username
+    document.getElementById('bitbucket_password').value = bitbucket_password
 }
 
 async function saveOptions() {
-    const options = {
-        github: {
-            token: document.getElementById('github_token').value,
-        },
-        gitlab: {
-            token: document.getElementById('gitlab_token').value,
-        },
-        bitbucket: {
-            username: document.getElementById('bitbucket_username').value,
-            password: document.getElementById('bitbucket_password').value,
-        },
+    const bitbucket_username = document.getElementById('bitbucket_username').value
+    const bitbucket_password = document.getElementById('bitbucket_password').value
+    const tokens = {
+        github: document.getElementById('github_token').value,
+        gitlab: document.getElementById('gitlab_token').value,
+        bitbucket:
+            bitbucket_username && bitbucket_password
+                ? btoa(`${bitbucket_username}:${bitbucket_password}`)
+                : '',
     }
-    await chrome.storage.sync.set({ options })
+    await chrome.storage.sync.set({ tokens })
     const status = document.getElementById('status')
     status.textContent = 'Options saved successfully'
     setTimeout(() => (status.textContent = ''), MESSAGE_TIMEOUT)

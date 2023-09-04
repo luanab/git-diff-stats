@@ -1,6 +1,6 @@
 const PATH_REGEX = /^(?:\/([^\/]+)\/([^\/]+))?\/pull-requests$/
 
-function get(username, password, resource) {
+function get(token, resource) {
     return new Promise((resolve, reject) => {
         const request = new XMLHttpRequest()
         request.onreadystatechange = () => {
@@ -13,16 +13,16 @@ function get(username, password, resource) {
             }
         }
         request.open('GET', `https://api.bitbucket.org/2.0${resource}`, true)
-        if (username && password) {
-            request.setRequestHeader('Authorization', `Basic ${btoa(`${username}:${password}`)}`)
+        if (token) {
+            request.setRequestHeader('Authorization', `Basic ${token}`)
         }
         request.send()
     })
 }
 
-async function getDiffStats(username, password, org, repo, pr) {
+async function getDiffStats(token, org, repo, pr) {
     const resource = `/repositories/${org}/${repo}/pullrequests/${pr}/diffstat`
-    const files = (await get(username, password, resource)).values
+    const files = (await get(token, resource)).values
     return {
         changedFiles: files.length,
         additions: files.reduce((acc, { lines_added }) => acc + lines_added, 0),
@@ -63,12 +63,11 @@ function updateHtml(element, stats) {
     }
 }
 
-export async function inject(options, path) {
+export async function inject(token, path) {
     const match = PATH_REGEX.test(path)
     if (!match) {
         return
     }
-    const { username, password } = options.bitbucket ?? {}
     await new Promise((resolve) => setTimeout(resolve, 1000))
     const elements = document.body.querySelectorAll('tr[data-qa="pull-request-row"]')
     const promises = []
@@ -77,7 +76,7 @@ export async function inject(options, path) {
             .querySelector('a[data-qa="pull-request-row-link"]')
             .getAttribute('href')
             .match(/\/([^\/]+)\/([^\/]+)\/pull-requests\/(\d+)/)
-        const promise = getDiffStats(username, password, org, repo, pr)
+        const promise = getDiffStats(token, org, repo, pr)
         promises.concat(promise.then((diff) => updateHtml(element, diff)))
     }
     await Promise.all(promises)
