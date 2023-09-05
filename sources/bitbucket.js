@@ -7,9 +7,9 @@ export default {
     css: {
         type: 'td',
         styles: {
-            files: 'background-color: #DFE1E6; border-radius: 2em; padding: 0 6px',
-            additions: 'color: #006644',
-            deletions: 'color: #BF2600',
+            files: 'border-radius: 2em; color: #172B4D; background-color: #DFE1E6; padding: 3px 8px',
+            additions: 'font-weight: 600; color: #006644; background-color: #E3FCEF; padding: 3px 4px',
+            deletions: 'font-weight: 600; color: #BF2600; background-color: #FFEBE6; padding: 3px 4px',
         },
     },
     getElements: async function (document) {
@@ -32,6 +32,6 @@ export default {
         }
     },
     getParentNode: function (element) {
-        return element.querySelector('td').parentNode
+        return element.querySelector('small')
     },
 }
