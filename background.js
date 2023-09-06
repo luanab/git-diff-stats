@@ -3,7 +3,7 @@ const TITLE_REGEX = /Pull requests/
 const NOTIFICATION = {
     type: 'basic',
     iconUrl: 'logo.png',
-    title: `Git +1 Failure`,
+    title: `Git Diff Stats Failure`,
 }
 
 chrome.runtime.onMessage.addListener(({ success, domain }) =>
