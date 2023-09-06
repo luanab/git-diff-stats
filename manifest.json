@@ -3,15 +3,18 @@
     "name": "Git Diff Stats",
     "description": "Enrich GitHub/GitLab/BitBucket pull/merge requests lists with number of files changed, lines added, and lines deleted.",
     "version": "1.0.0",
+    "icons": {
+        "16": "icon/16.png",
+        "32": "icon/32.png",
+        "48": "icon/48.png",
+        "128": "icon/128.png"
+    },
     "permissions": ["storage", "tabs", "notifications"],
     "host_permissions": [
         "https://api.github.com/graphql",
         "https://gitlab.com/api/graphql",
         "https://api.bitbucket.org/2.0/repositories/*/*/pullrequests"
     ],
-    "action": {
-        "default_icon": "logo.png"
-    },
     "options_ui": {
         "page": "options.html",
         "open_in_tab": false
@@ -21,11 +24,7 @@
     },
     "content_scripts": [
         {
-            "matches": [
-                "https://*.github.com/*",
-                "https://*.gitlab.com/*",
-                "https://*.bitbucket.org/*"
-            ],
+            "matches": ["https://*.github.com/*", "https://*.gitlab.com/*", "https://*.bitbucket.org/*"],
             "js": ["content.js"]
         }
     ],
