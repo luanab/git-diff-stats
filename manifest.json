@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Git Diff Stats",
-    "description": "Enrich GitHub/GitLab/BitBucket pull/merge requests lists with number of files changed, lines added, and lines deleted.",
+    "description": "Inject pull request diff stats into GitHub/GitLab/BitBucket pull request lists.",
     "version": "1.0.0",
     "icons": {
         "16": "icon/16.png",
